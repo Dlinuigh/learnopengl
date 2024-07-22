@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "meson",
+			"target": "get_started/window:executable",
+			"mode": "build",
+			"problemMatcher": [
+				"$meson-gcc"
+			],
+			"group": "build",
+			"label": "Meson: Build get_started/window:executable"
+		},
+		{
+			"type": "meson",
+			"mode": "build",
+			"problemMatcher": [
+				"$meson-gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "Meson: Build all targets"
+		}
+	]
+}
