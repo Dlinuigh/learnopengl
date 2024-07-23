@@ -150,8 +150,8 @@ public:
 };
 int main() {
   Program program({800, 600});
-  program.program_shader->load_shader("vertex.glsl", GL_VERTEX_SHADER);
-  program.program_shader->load_shader("fragment.glsl", GL_FRAGMENT_SHADER);
+  program.program_shader->load_shader("assets/glsl/vertex.glsl", GL_VERTEX_SHADER);
+  program.program_shader->load_shader("assets/glsl/fragment.glsl", GL_FRAGMENT_SHADER);
   program.program_shader->link();
   std::vector<float> triangle = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
                                  0.0f,  0.0f,  0.5f, 0.0f};

@@ -36,8 +36,8 @@ void load_program(unsigned int &program_shader) {
   shader_vertex = glCreateShader(GL_VERTEX_SHADER);
   shader_fragment = glCreateShader(GL_FRAGMENT_SHADER);
   program_shader = glCreateProgram();
-  load_shader("vertex.glsl", shader_vertex);
-  load_shader("fragment.glsl", shader_fragment);
+  load_shader("assets/glsl/vertex.glsl", shader_vertex);
+  load_shader("assets/glsl/fragment.glsl", shader_fragment);
   check(glGetShaderiv, shader_vertex, GL_COMPILE_STATUS, "Vertex",
         glGetShaderInfoLog);
   check(glGetShaderiv, shader_fragment, GL_COMPILE_STATUS, "Fragment",
