@@ -188,7 +188,7 @@ public:
                               nullptr);
     glfwMakeContextCurrent(window);
     glad_init();
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, scr_size.x, scr_size.y);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     // 使用shared_ptr为了将program的构建函数放到glad后面运行
@@ -235,7 +235,7 @@ public:
     program_shader->set("texture2", 1);
     while (!glfwWindowShouldClose(window)) {
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT); // | GL_DEPTH_BUFFER_BIT
+      glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT); 
       for (auto t = 0; t < textures.size(); t++) {
         textures[t]->activate(t);
       }
@@ -243,8 +243,7 @@ public:
           1.0f); // make sure to initialize matrix to identity matrix first
       glm::mat4 view = glm::mat4(1.0f);
       glm::mat4 projection = glm::mat4(1.0f);
-      model =
-          glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));  
       view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
       projection =
           glm::perspective(glm::radians(45.0f),
@@ -268,15 +267,47 @@ int main() {
                                       GL_FRAGMENT_SHADER);
   program.program_shader->link();
   std::vector<float> vertices = {
-      // positions          // colors           // texture coords
-      0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // top right
-      0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  // top left
-  };
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
   std::vector<unsigned int> indices = {
-      0, 1, 3, // first triangle
-      1, 2, 3  // second triangle
+      0,1,2,
+      3,4,5,
+
+      6,7,8,
+      9,10,11,
+
+      12,13,14,
+      15,16,17,
+
+      18,19,20,
+      21,22,23,
+
+      24,25,26,
+      27,28,29,
+
+      30,31,32,
+      33,34,35,
   };
   std::shared_ptr<Poly> poly = std::make_shared<Poly>(true, vertices, indices);
   program.push_back(poly);
