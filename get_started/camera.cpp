@@ -24,7 +24,7 @@ void Program::run() {
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    for (auto t = 0; t < textures.size(); t++) {
+    for (auto t = 0; t < (int)textures.size(); t++) {
       textures[t]->activate(t);
     }
     camera->run(program_shader);
