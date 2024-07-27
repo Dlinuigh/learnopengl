@@ -14,16 +14,17 @@ void Program::process() {
   camera->process();
 }
 void Program::run() {
-  for(auto &it: children){
-    it->program->link();
-  }
-  for(auto &t:light_src){
-    t->program->link();
-  }
+  // for(auto &it: children){
+  //   it->program->link();
+  // }
+  // for(auto &t:light_src){
+  //   t->program->link();
+  // }
   // 不能在这里进行link,会导致texture出现问题
   /*
   我找到问题了，创建的shared_ptr通过参数传递进行赋值出现了错误，现在我直接在类里面进行初始化，而不是通过传入一个初始化的类。我测试了首先move是不行的，然后我之前的直接赋值也是不行的
   但是问题比这个还要麻烦，如果使用move，那么就会出现原先修改了link的方法不能fix新的状况，而以前的直接赋值可以通过立马进行link解决texture显示灰色的问题。
+  使用现在的做法，取消program的赋值不会导致上面的问题，你可以在任何合适的地方进行link。
   */
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -101,7 +102,7 @@ int main() {
                              GL_VERTEX_SHADER);
   poly->program->load_shader("assets/glsl/fragment_coordinate.glsl",
                              GL_FRAGMENT_SHADER);
-  // poly->program->link();
+  poly->program->link();
   program.push_back(poly);
   std::vector<float> light_vectices = {
       -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
@@ -127,7 +128,7 @@ int main() {
                               GL_VERTEX_SHADER);
   light->program->load_shader("assets/glsl/fragment_color.glsl",
                               GL_FRAGMENT_SHADER);
-  // light->program->link();
+  light->program->link();
   program.push_back(light);
   program.run();
 }
