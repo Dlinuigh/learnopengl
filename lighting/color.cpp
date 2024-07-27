@@ -8,9 +8,10 @@ void Program::process() {
   for (auto &it : children) {
     it->process();
   }
-  for (auto &it : light_src) {
-    it->process();
-  }
+  // for (auto &it : light_src) {
+  //   it->process();
+  // }
+  light_src->process();
   camera->process();
 }
 void Program::run() {
@@ -35,17 +36,23 @@ void Program::run() {
       // default object position, if you want to change just use set(model)
       it->set("view", camera->get("view"));
       it->set("projection", camera->get("projection"));
+      it->program->set("light_color", light_src->light_color);
       it->activate_textures();
       it->set();
       it->draw();
     }
-    for (auto &it : light_src) {
-      it->program->use();
-      it->set("view", camera->get("view"));
-      it->set("projection", camera->get("projection"));
-      it->set(); // set light position
-      it->draw();
-    }
+    // for (auto &it : light_src) {
+    //   it->program->use();
+    //   it->set("view", camera->get("view"));
+    //   it->set("projection", camera->get("projection"));
+    //   it->set(); // set light position
+    //   it->draw();
+    // }
+    light_src->program->use();
+    light_src->set("view", camera->get("view"));
+    light_src->set("projection", camera->get("projection"));
+    light_src->set();
+    light_src->draw();
     glfwSwapBuffers(window);
     glfwPollEvents();
     process();
@@ -100,7 +107,7 @@ int main() {
   poly->insert("texture2", texture2);
   poly->program->load_shader("assets/glsl/vertex_coordinate.glsl",
                              GL_VERTEX_SHADER);
-  poly->program->load_shader("assets/glsl/fragment_coordinate.glsl",
+  poly->program->load_shader("assets/glsl/fragment_color.glsl",
                              GL_FRAGMENT_SHADER);
   poly->program->link();
   program.push_back(poly);
@@ -126,9 +133,10 @@ int main() {
       std::make_shared<Light>(light_vectices, indices, program.window);
   light->program->load_shader("assets/glsl/vertex_color.glsl",
                               GL_VERTEX_SHADER);
-  light->program->load_shader("assets/glsl/fragment_color.glsl",
+  light->program->load_shader("assets/glsl/fragment_color_light.glsl",
                               GL_FRAGMENT_SHADER);
   light->program->link();
-  program.push_back(light);
+  // program.push_back(light);
+  program.light_src = std::move(light);
   program.run();
 }

@@ -64,6 +64,9 @@ public:
     glUniform4f(glGetUniformLocation(id, name), value.x, value.y, value.z,
                 value.w);
   }
+  void set(const char *name, glm::fvec3 value) const {
+    glUniform3f(glGetUniformLocation(id, name), value.x, value.y, value.z);
+  }
   void set(const char *name, int value) const {
     glUniform1i(glGetUniformLocation(id, name), value);
   }
@@ -135,6 +138,7 @@ public:
       unsigned int vbo, ebo;
       glGenBuffers(1, &vbo);
       glGenBuffers(1, &ebo);
+      glGenVertexArrays(1, &vao);
       glBindVertexArray(vao);
       glBindBuffer(GL_ARRAY_BUFFER, vbo);
       glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),
@@ -242,7 +246,6 @@ class Light {
   projection,所以camera不是物体.
   TODO 但是我在这个地方不会进行这样的抽象,仅仅是对于每一个物体做一个抽象,
   */
-  glm::vec4 light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
   glm::mat4 model;
   std::map<std::string, glm::mat4> program_mat4; // 设置到program的变量
   GLFWwindow *window;
@@ -251,6 +254,7 @@ class Light {
   unsigned int vao;
 
 public:
+  glm::vec4 light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
   Light(std::vector<float> _vertices, std::vector<unsigned int> _indices,
         GLFWwindow *_window)
@@ -331,10 +335,10 @@ class Program {
     }
   }
   std::vector<std::shared_ptr<Poly>> children;
-  std::vector<std::shared_ptr<Light>> light_src;
 
 public:
   GLFWwindow *window;
+  std::shared_ptr<Light> light_src = nullptr;
   Program(glm::ivec2 _size) : scr_size(_size) {
     glfwInit();
     window = glfwCreateWindow(scr_size.x, scr_size.y, "Hello Window", nullptr,
@@ -352,14 +356,16 @@ public:
     for (auto &child : children) {
       child.reset();
     }
-    for (auto &t : light_src) {
-      t.reset();
-    }
+    // for (auto &t : light_src) {
+    //   t.reset();
+    // }
+    light_src.reset();
     glfwDestroyWindow(window);
     glfwTerminate();
   }
   void push_back(std::shared_ptr<Poly> &poly) { children.push_back(poly); }
-  void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light); }
+  // void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light);
+  // }
   void process();
   void run();
 };

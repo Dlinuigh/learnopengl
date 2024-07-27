@@ -62,6 +62,9 @@ public:
     glUniform4f(glGetUniformLocation(id, name), value.x, value.y, value.z,
                 value.w);
   }
+  void set(const char *name, glm::fvec3 value) const {
+    glUniform3f(glGetUniformLocation(id, name), value.x, value.y, value.z);
+  }
   void set(const char *name, int value) const {
     glUniform1i(glGetUniformLocation(id, name), value);
   }
@@ -111,74 +114,37 @@ class Poly {
   std::vector<unsigned int> indices;
   unsigned int vao;
   glm::mat4 model;
-  std::map<std::string, glm::mat4> program_mat4;
-  std::map<std::string, int> program_int;
-  std::map<std::string, float> program_float;
   GLFWwindow *window;
   float scale = 0.5f;
 
 public:
   std::map<std::string, std::shared_ptr<ImageTexture>> textures;
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
-  Poly(bool texture, std::vector<float> _vertices,
-       std::vector<unsigned int> _indices, GLFWwindow *_window)
+  Poly(std::vector<float> _vertices, std::vector<unsigned int> _indices,
+       GLFWwindow *_window)
       : vertices(std::move(_vertices)), indices(std::move(_indices)),
         window(_window) {
-    if (texture) {
-      unsigned int vbo, ebo;
-      glGenBuffers(1, &vbo);
-      glGenBuffers(1, &ebo);
-      // NOTE 我忘记写下面这行代码导致的问题，离谱
-      glGenVertexArrays(1, &vao);
-      glBindVertexArray(vao);
-      glBindBuffer(GL_ARRAY_BUFFER, vbo);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),
-                   vertices.data(), GL_STATIC_DRAW);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                   sizeof(unsigned int) * indices.size(), indices.data(),
-                   GL_STATIC_DRAW);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                            (void *)0);
-      glEnableVertexAttribArray(0);
-      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                            (void *)(3 * sizeof(float)));
-      glEnableVertexAttribArray(1);
-      // checkError("texture");
-    } else {
-      unsigned int vbo, ebo;
-      glGenBuffers(1, &vbo);
-      glGenBuffers(1, &ebo);
-      glGenVertexArrays(1, &vao);
-      glBindVertexArray(vao);
-      glBindBuffer(GL_ARRAY_BUFFER, vbo);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),
-                   vertices.data(), GL_STATIC_DRAW);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                   sizeof(unsigned int) * indices.size(), indices.data(),
-                   GL_STATIC_DRAW);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                            (void *)0);
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindVertexArray(0);
-      glDeleteBuffers(1, &vbo);
-      glDeleteBuffers(1, &ebo);
-    }
-    // 直接赋值 no
-    // move赋值 no
-    // 去除引用 move赋值 no
-    // 去除引用 直接赋值 no
-    // 直接赋值 去除引用 单program yes
-    // move赋值 去除引用 单program yes
-    // move赋值 单program yes
-    // 直接赋值 单program yes
-    // while上方link no
-    // while上方link 单program yes
-    // program = _program;
+    unsigned int vbo, ebo;
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),
+                 vertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(),
+                 indices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
     model = glm::mat4(1.0f);
-    // checkError("Poly init");
   }
   ~Poly() {
     for (auto &texture : textures) {
@@ -202,15 +168,6 @@ public:
   }
   void set() {
     program->set("model", model);
-    for (auto &it : program_mat4) {
-      program->set(it.first.c_str(), it.second);
-    }
-    for (auto &it : program_int) {
-      program->set(it.first.c_str(), it.second);
-    }
-    for (auto &it : program_float) {
-      program->set(it.first.c_str(), it.second);
-    }
     program->set("scale", scale);
   }
   void process() {
@@ -225,9 +182,17 @@ public:
       }
     }
   }
-  void set(std::string name, glm::mat4 value) { program_mat4[name] = value; }
-  void set(std::string name, int value) { program_int[name] = value; }
-  void set(std::string name, float value) { program_float[name] = value; }
+  void set(std::string name, glm::mat4 value) {
+    program->set(name.c_str(), value);
+  }
+  void set(std::string name, int value) { program->set(name.c_str(), value); }
+  void set(std::string name, float value) { program->set(name.c_str(), value); }
+  void set(std::string name, glm::fvec4 value) {
+    program->set(name.c_str(), value);
+  }
+  void set(std::string name, glm::fvec3 value) {
+    program->set(name.c_str(), value);
+  }
   void draw() {
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -236,16 +201,15 @@ public:
 void framebuffer_size_callback(GLFWwindow *, int width, int height);
 class Camera;
 class Light {
-  glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 1.0f);
-  glm::vec4 light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
   glm::mat4 model;
-  std::map<std::string, glm::mat4> program_mat4;
   GLFWwindow *window;
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
 
 public:
+  glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 1.0f);
+  glm::vec4 light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
   Light(std::vector<float> _vertices, std::vector<unsigned int> _indices,
         GLFWwindow *_window)
@@ -294,16 +258,21 @@ public:
       lightPos.z += 0.1f;
     }
   }
-  void set(std::string name, glm::mat4 value) { program_mat4[name] = value; }
+  void set(std::string name, glm::mat4 value) {
+    program->set(name.c_str(), value);
+  }
+  void set(std::string name, glm::fvec4 value) {
+    program->set(name.c_str(), value);
+  }
+  void set(std::string name, glm::fvec3 value) {
+    program->set(name.c_str(), value);
+  }
   void set() {
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f));
     program->set("model", model);
     program->set("light_color", light_color);
-    for (auto &it : program_mat4) {
-      program->set(it.first.c_str(), it.second);
-    }
   }
   void draw() {
     glBindVertexArray(vao);
@@ -325,10 +294,10 @@ class Program {
     }
   }
   std::vector<std::shared_ptr<Poly>> children;
-  std::vector<std::shared_ptr<Light>> light_src;
 
 public:
   GLFWwindow *window;
+  std::shared_ptr<Light> light_src = nullptr;
   Program(glm::ivec2 _size) : scr_size(_size) {
     glfwInit();
     window = glfwCreateWindow(scr_size.x, scr_size.y, "Hello Window", nullptr,
@@ -345,14 +314,13 @@ public:
     for (auto &child : children) {
       child.reset();
     }
-    for (auto &t : light_src) {
-      t.reset();
-    }
+    light_src.reset();
     glfwDestroyWindow(window);
     glfwTerminate();
   }
   void push_back(std::shared_ptr<Poly> &poly) { children.push_back(poly); }
-  void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light); }
+  // void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light);
+  // }
   void process();
   void run();
 };
@@ -364,7 +332,6 @@ class Camera {
   GLFWwindow *window;
   glm::mat4 view = glm::mat4(1.0f), projection = glm::mat4(1.0f);
   glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-  glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
   glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
   const float cameraSpeed = 0.05f;
   static void mouse_callback_handler(GLFWwindow *window, double xpos,
@@ -413,6 +380,7 @@ class Camera {
   }
 
 public:
+  glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
   Camera(GLFWwindow *_window, glm::ivec2 _scr_size)
       : scr_size(_scr_size), window(_window) {
     glfwSetWindowUserPointer(_window, this);
