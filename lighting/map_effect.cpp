@@ -1,4 +1,4 @@
-#include "material.h"
+#include "map_effect.h"
 void checkError(const char *function) {
   GLenum err;
   while ((err = glGetError()) != GL_NO_ERROR) {
@@ -33,10 +33,8 @@ void Program::run() {
       it->program->set("material.shininess",64.0f);
       it->program->set("light.position", light_src->lightPos);
       it->program->set("light.viewPos", camera->cameraPos);
-      glm::vec4 diffuse = light_src->light_color * glm::vec4(0.5f);
-      glm::vec4 ambient = light_src->light_color * glm::vec4(0.2f);
-      it->program->set("light.ambient", ambient);
-      it->program->set("light.diffuse", diffuse);
+      it->program->set("light.ambient", glm::vec4(0.2f));
+      it->program->set("light.diffuse", glm::vec4(0.5f));
       it->program->set("light.specular", glm::vec4(1.0f));
       it->set();
       it->draw();

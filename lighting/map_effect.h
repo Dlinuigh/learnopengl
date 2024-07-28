@@ -90,7 +90,7 @@ public:
                     GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
+    // stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (data) {
       int mode = nrChannels == 3 ? GL_RGB : GL_RGBA;
@@ -235,9 +235,21 @@ public:
     if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
       lightPos.z += 0.1f;
     }
-    light_color.x = sin(glfwGetTime() * 2.0f);
-    light_color.y = sin(glfwGetTime() * 0.7f);
-    light_color.z = sin(glfwGetTime() * 1.3f);
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+      lightPos.y -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
+      lightPos.y += 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS){
+      lightPos.x -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
+      lightPos.x += 0.1f;
+    }
+    // light_color.x = sin(glfwGetTime() * 2.0f);
+    // light_color.y = sin(glfwGetTime() * 0.7f);
+    // light_color.z = sin(glfwGetTime() * 1.3f);
   }
   void set() {
     model = glm::mat4(1.0f);
@@ -277,7 +289,6 @@ public:
     glfwMakeContextCurrent(window);
     glad_init();
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glViewport(0, 0, scr_size.x, scr_size.y);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
