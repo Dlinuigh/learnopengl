@@ -82,6 +82,7 @@ public:
       unsigned int vbo, ebo;
       glGenBuffers(1, &vbo);
       glGenBuffers(1, &ebo);
+      glGenVertexArrays(1, &vao);
       glBindVertexArray(vao);
       glBindBuffer(GL_ARRAY_BUFFER, vbo);
       glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),

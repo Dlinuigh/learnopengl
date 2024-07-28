@@ -1,4 +1,10 @@
 #include "color.h"
+void glCheck() {
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    std::cerr << "Error: " << err << std::endl;
+  }
+}
 void framebuffer_size_callback(GLFWwindow *, int width, int height) {
   glViewport(0, 0, width, height);
 }
@@ -57,6 +63,7 @@ void Program::run() {
     glfwPollEvents();
     process();
   }
+  glCheck();
 }
 int main() {
   Program program({800, 600});
