@@ -1,4 +1,10 @@
 #include "camera.h"
+void checkError(const char *function) {
+  GLenum err;
+  while ((err = glGetError()) != GL_NO_ERROR) {
+    std::cerr << function << ": " << err << std::endl;
+  }
+}
 void framebuffer_size_callback(GLFWwindow *, int width, int height) {
   glViewport(0, 0, width, height);
 }
@@ -19,30 +25,34 @@ void Program::process() {
 void Program::run() {
   program_shader->use();
   // 可以用for处理,但是此处简便
-  program_shader->set("texture1", 0);
-  program_shader->set("texture2", 1);
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (auto t = 0; t < (int)textures.size(); t++) {
       textures[t]->activate(t);
     }
-    camera->run(program_shader);
+    program_shader->set("texture1", 0);
+    program_shader->set("texture2", 1);
     program_shader->set("model", model);
     program_shader->set("scale", scale);
+    program_shader->set("view", camera->view);
+    program_shader->set("projection", camera->projection);
     draw();
     glfwSwapBuffers(window);
     glfwPollEvents();
     process();
   }
+  checkError("run");
 }
 int main() {
   Program program({800, 600});
+  glEnable(GL_DEBUG_OUTPUT);
   program.program_shader->load_shader("assets/glsl/vertex_coordinate.glsl",
                                       GL_VERTEX_SHADER);
   program.program_shader->load_shader("assets/glsl/fragment_coordinate.glsl",
                                       GL_FRAGMENT_SHADER);
   program.program_shader->link();
+  checkError("link");
   std::vector<float> vertices = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
       0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
@@ -89,4 +99,5 @@ int main() {
       std::make_shared<ImageTexture>("assets/img/awesomeface.png");
   program.push_back(texture2);
   program.run();
+  checkError("main");
 }

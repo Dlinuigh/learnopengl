@@ -371,7 +371,7 @@ public:
 };
 class Camera {
   bool firstMouse = true;
-  float yaw = -90.0f, pitch, fov;
+  float yaw = -90.0f, pitch=0.0f, fov=45.0f;
   double lastX, lastY;
   glm::ivec2 scr_size;
   GLFWwindow *window;

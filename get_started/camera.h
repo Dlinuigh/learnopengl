@@ -63,6 +63,9 @@ public:
     glUniform4f(glGetUniformLocation(id, name), value.x, value.y, value.z,
                 value.w);
   }
+  void set(const char *name, glm::fvec3 value) const {
+    glUniform3f(glGetUniformLocation(id, name), value.x, value.y, value.z);
+  }
   void set(const char *name, int value) const {
     glUniform1i(glGetUniformLocation(id, name), value);
   }
@@ -133,6 +136,7 @@ public:
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
   }
 };
+void checkError(const char *function);
 void framebuffer_size_callback(GLFWwindow *, int width, int height);
 class ImageTexture {
   unsigned int id;
@@ -230,12 +234,11 @@ public:
   void run();
 };
 class Camera {
-  bool firstMouse=true;
-  float yaw = -90.0f, pitch, fov;
+  bool firstMouse = true;
+  float yaw = -90.0f, pitch=0.0f, fov=45.0f;
   double lastX, lastY;
   glm::ivec2 scr_size;
   GLFWwindow *window;
-  glm::mat4 view = glm::mat4(1.0f), projection = glm::mat4(1.0f);
   glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
   glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
   glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -297,13 +300,14 @@ class Camera {
   }
 
 public:
+  glm::mat4 view = glm::mat4(1.0f), projection = glm::mat4(1.0f);
   Camera(GLFWwindow *_window, glm::ivec2 _scr_size)
       : scr_size(_scr_size), window(_window) {
     glfwSetWindowUserPointer(_window, this);
     glfwSetCursorPosCallback(_window, mouse_callback_handler);
     glfwSetScrollCallback(_window, scroll_callback_handler);
-    lastX = scr_size.x/2.0;
-    lastY = scr_size.y/2.0;
+    lastX = scr_size.x / 2.0;
+    lastY = scr_size.y / 2.0;
   }
   void process() {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -316,13 +320,9 @@ public:
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
       cameraPos +=
           glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-  }
-  void run(std::shared_ptr<ShaderProgram> program_shader) {
     view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     projection = glm::perspective(glm::radians(fov),
                                   (float)scr_size.x / scr_size.y, 0.1f, 100.0f);
-    program_shader->set("view", view);
-    program_shader->set("projection", projection);
   }
 };
 #endif
