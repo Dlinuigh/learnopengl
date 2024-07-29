@@ -33,19 +33,26 @@ void Program::run() {
       it->program->set("material.shininess", 64.0f);
       it->program->set("light.position", light_src->lightPos);
       it->program->set("viewPos", camera->cameraPos);
-      it->program->set("light.ambient", glm::vec4(0.2f));
-      it->program->set("light.diffuse", glm::vec4(0.5f));
-      it->program->set("light.specular", glm::vec4(1.0f));
-      it->program->set("light.direction", light_src->direction);
-      it->program->set("parallel_light", light_src->parallel_light);
+      it->program->set("light.ambient", light_src->ambient);
+      it->program->set("light.diffuse", light_src->diffuse);
+      it->program->set("light.specular", light_src->specular);
+      it->program->set("light.direction", light_src->light_type == 0
+                                              ? light_src->direction
+                                              : camera->cameraFront);
+      it->program->set("light_type", light_src->light_type);
+      it->program->set("light.constant", light_src->constant);
+      it->program->set("light.linear", light_src->linear);
+      it->program->set("light.quadratic", light_src->quadratic);
+      it->program->set("light.cutOff", light_src->cutOff);
+      it->program->set("light.outerCutoff", light_src->outerCutoff);
       it->set();
       it->draw();
     }
-    // light_src->program->use();
-    // light_src->program->set("view", camera->view);
-    // light_src->program->set("projection", camera->projection);
-    // light_src->set();
-    // light_src->draw();
+    light_src->program->use();
+    light_src->program->set("view", camera->view);
+    light_src->program->set("projection", camera->projection);
+    light_src->set();
+    light_src->draw();
     glfwSwapBuffers(window);
     glfwPollEvents();
     process();
@@ -143,12 +150,20 @@ int main() {
       -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
       0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f};
   std::shared_ptr<Light> light =
-      std::make_shared<Light>(true, light_vectices, indices, program.window);
+      std::make_shared<Light>(light_vectices, indices, program.window);
   light->program->load_shader("assets/glsl/vertex_color.glsl",
                               GL_VERTEX_SHADER);
   light->program->load_shader("assets/glsl/fragment_color_light.glsl",
                               GL_FRAGMENT_SHADER);
   light->direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+  light->diffuse = glm::vec4(0.8f);
+  light->ambient = glm::vec4(0.1f);
+  light->specular = glm::vec4(1.0f);
+  light->constant = 1.0f;
+  light->linear = 0.09f;
+  light->quadratic = 0.032f;
+  light->cutOff = glm::cos(glm::radians(12.5f));
+  light->outerCutoff = glm::cos(glm::radians(17.5f));
   program.light_src = std::move(light);
   program.run();
 }

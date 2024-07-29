@@ -196,12 +196,12 @@ public:
   float quadratic;
   float cutOff;
   float outerCutoff;
-  bool parallel_light;
+  int light_type=1;
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
-  Light(bool _parallel_light, std::vector<float> _vertices,
+  Light(std::vector<float> _vertices,
         std::vector<unsigned int> _indices, GLFWwindow *_window)
       : window(_window), vertices(std::move(_vertices)),
-        indices(std::move(_indices)), parallel_light(_parallel_light) {
+        indices(std::move(_indices)){
     unsigned int vbo, ebo;
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
@@ -255,6 +255,15 @@ public:
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) {
       lightPos.x += 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+      light_type = 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+      light_type = 2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+      light_type = 0;
     }
   }
   void set() {
@@ -320,7 +329,6 @@ class Camera {
   double lastX, lastY;
   glm::ivec2 scr_size;
   GLFWwindow *window;
-  glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
   glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
   const float cameraSpeed = 0.05f;
   static void mouse_callback_handler(GLFWwindow *window, double xpos,
@@ -369,6 +377,7 @@ class Camera {
   }
 
 public:
+  glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
   glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
   glm::mat4 view = glm::mat4(1.0f), projection = glm::mat4(1.0f);
   Camera(GLFWwindow *_window, glm::ivec2 _scr_size)
