@@ -32,7 +32,8 @@ void Program::run() {
       it->activate_textures();
       it->program->set("material.shininess",64.0f);
       it->program->set("light.position", light_src->lightPos);
-      it->program->set("light.viewPos", camera->cameraPos);
+      // 居然搞错了变量，原先是light.viewPos
+      it->program->set("viewPos", camera->cameraPos);
       it->program->set("light.ambient", glm::vec4(0.2f));
       it->program->set("light.diffuse", glm::vec4(0.5f));
       it->program->set("light.specular", glm::vec4(1.0f));
