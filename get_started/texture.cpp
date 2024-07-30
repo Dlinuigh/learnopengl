@@ -63,13 +63,13 @@ public:
     glUniform1f(glGetUniformLocation(id, name), value);
   }
 };
-class Poly {
+class Mesh {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
 
 public:
-  Poly(bool texture, std::vector<float> _vertices,
+  Mesh(bool texture, std::vector<float> _vertices,
        std::vector<unsigned int> _indices)
       : vertices(std::move(_vertices)), indices(std::move(_indices)) {
     if (texture) {
@@ -118,7 +118,7 @@ public:
       glDeleteBuffers(1, &ebo);
     }
   }
-  ~Poly() { glDeleteVertexArrays(1, &vao); }
+  ~Mesh() { glDeleteVertexArrays(1, &vao); }
   void draw() {
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -175,7 +175,7 @@ class Program {
              GLAD_VERSION_MINOR(version));
     }
   }
-  std::vector<std::shared_ptr<Poly>> children;
+  std::vector<std::shared_ptr<Mesh>> children;
   std::vector<std::shared_ptr<ImageTexture>> textures;
 
 public:
@@ -203,7 +203,7 @@ public:
     glfwDestroyWindow(window);
     glfwTerminate();
   }
-  void push_back(std::shared_ptr<Poly> &poly) { children.push_back(poly); }
+  void push_back(std::shared_ptr<Mesh> &poly) { children.push_back(poly); }
   void push_back(std::shared_ptr<ImageTexture> &texture) {
     textures.push_back(texture);
   }
@@ -265,7 +265,7 @@ int main() {
   // std::vector<float> triangle = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
   //                                0.0f,  0.0f,  0.5f, 0.0f};
   // std::vector<unsigned int> indices = {0, 1, 2};
-  // std::shared_ptr<Poly> poly = std::make_shared<Poly>(triangle, indices);
+  // std::shared_ptr<Mesh> poly = std::make_shared<Mesh>(triangle, indices);
   // program.push_back(poly);
   std::vector<float> vertices = {
       // positions          // colors           // texture coords
@@ -278,7 +278,7 @@ int main() {
       0, 1, 3, // first triangle
       1, 2, 3  // second triangle
   };
-  std::shared_ptr<Poly> poly = std::make_shared<Poly>(true, vertices, indices);
+  std::shared_ptr<Mesh> poly = std::make_shared<Mesh>(true, vertices, indices);
   program.push_back(poly);
   std::shared_ptr<ImageTexture> texture1 =
       std::make_shared<ImageTexture>("assets/img/wall.jpg");

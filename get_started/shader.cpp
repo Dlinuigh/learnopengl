@@ -55,13 +55,13 @@ public:
                 value.w);
   }
 };
-class Poly {
+class Mesh {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
 
 public:
-  Poly(std::vector<float> _vertices, std::vector<unsigned int> _indices)
+  Mesh(std::vector<float> _vertices, std::vector<unsigned int> _indices)
       : vertices(std::move(_vertices)), indices(std::move(_indices)) {
     unsigned int vbo, ebo;
     glGenBuffers(1, &vbo);
@@ -82,7 +82,7 @@ public:
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
   }
-  ~Poly() { glDeleteVertexArrays(1, &vao); }
+  ~Mesh() { glDeleteVertexArrays(1, &vao); }
   void draw() {
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -104,7 +104,7 @@ class Program {
              GLAD_VERSION_MINOR(version));
     }
   }
-  std::vector<std::shared_ptr<Poly>> children;
+  std::vector<std::shared_ptr<Mesh>> children;
 
 public:
   std::shared_ptr<ShaderProgram> program_shader = nullptr;
@@ -128,7 +128,7 @@ public:
     glfwDestroyWindow(window);
     glfwTerminate();
   }
-  void push_back(std::shared_ptr<Poly> &poly) { children.push_back(poly); }
+  void push_back(std::shared_ptr<Mesh> &poly) { children.push_back(poly); }
   void draw() {
     for (auto &it : children) {
       it->draw();
@@ -156,7 +156,7 @@ int main() {
   std::vector<float> triangle = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
                                  0.0f,  0.0f,  0.5f, 0.0f};
   std::vector<unsigned int> indices = {0, 1, 2};
-  std::shared_ptr<Poly> poly = std::make_shared<Poly>(triangle, indices);
+  std::shared_ptr<Mesh> poly = std::make_shared<Mesh>(triangle, indices);
   program.push_back(poly);
   program.run();
 }

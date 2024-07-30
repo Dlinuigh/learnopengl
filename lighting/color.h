@@ -114,7 +114,7 @@ public:
   }
   ~ImageTexture() { glDeleteTextures(1, &id); }
 };
-class Poly {
+class Mesh {
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
@@ -130,7 +130,7 @@ public:
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
   // FIXME
   // 使用下面的代码会出现错误，可能是program的指针的问题，有两点使用move可能导致新的指针失去了某些特性
-  Poly(bool texture, std::vector<float> _vertices,
+  Mesh(bool texture, std::vector<float> _vertices,
        std::vector<unsigned int> _indices, GLFWwindow *_window)
       : vertices(std::move(_vertices)), indices(std::move(_indices)),
         window(_window) {
@@ -179,7 +179,7 @@ public:
     }
     model = glm::mat4(1.0f);
   }
-  ~Poly() {
+  ~Mesh() {
     for (auto &texture : textures) {
       texture.second.reset();
     }
@@ -334,7 +334,7 @@ class Program {
              GLAD_VERSION_MINOR(version));
     }
   }
-  std::vector<std::shared_ptr<Poly>> children;
+  std::vector<std::shared_ptr<Mesh>> children;
 
 public:
   GLFWwindow *window;
@@ -363,7 +363,7 @@ public:
     glfwDestroyWindow(window);
     glfwTerminate();
   }
-  void push_back(std::shared_ptr<Poly> &poly) { children.push_back(poly); }
+  void push_back(std::shared_ptr<Mesh> &poly) { children.push_back(poly); }
   // void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light);
   // }
   void process();

@@ -4,3 +4,4 @@ project('learnopengl','cpp',
                      'cpp_std=c++20'])
 subdir('get_started')
 subdir('lighting')
+subdir('model_loading')

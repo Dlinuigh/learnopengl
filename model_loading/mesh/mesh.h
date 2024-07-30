@@ -54,24 +54,28 @@ public:
           glGetProgramInfoLog);
   }
   void use() { glUseProgram(id); }
-  void set(const char *name, glm::ivec4 value) const {
-    glUniform4i(glGetUniformLocation(id, name), value.x, value.y, value.z,
-                value.w);
+  void set(const char* name, glm::ivec4 value) const {
+    glUniform4i(glGetUniformLocation(id, name), value.x, value.y,
+                value.z, value.w);
   }
-  void set(const char *name, glm::fvec4 value) const {
-    glUniform4f(glGetUniformLocation(id, name), value.x, value.y, value.z,
-                value.w);
+  void set(const char* name, glm::fvec4 value) const {
+    glUniform4f(glGetUniformLocation(id, name), value.x, value.y,
+                value.z, value.w);
   }
-  void set(const char *name, glm::fvec3 value) const {
-    glUniform3f(glGetUniformLocation(id, name), value.x, value.y, value.z);
+  void set(const char* name, glm::fvec3 value) const {
+    glUniform3f(glGetUniformLocation(id, name), value.x, value.y,
+                value.z);
   }
-  void set(const char *name, int value) const {
+  void set(const char* name, bool value) const {
     glUniform1i(glGetUniformLocation(id, name), value);
   }
-  void set(const char *name, float value) const {
+  void set(const char* name, int value) const {
+    glUniform1i(glGetUniformLocation(id, name), value);
+  }
+  void set(const char* name, float value) const {
     glUniform1f(glGetUniformLocation(id, name), value);
   }
-  void set(const char *name, glm::mat4 &value) const {
+  void set(const char* name, glm::mat4 &value) const {
     glUniformMatrix4fv(glGetUniformLocation(id, name), 1, GL_FALSE,
                        glm::value_ptr(value));
   }
@@ -110,13 +114,14 @@ public:
   ~ImageTexture() { glDeleteTextures(1, &id); }
 };
 class Mesh {
+  // 终于等到了改名，现在这个叫做mesh，并且不要加入新的变量
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
-  glm::mat4 model;
   GLFWwindow *window;
 
 public:
+  glm::mat4 model;
   std::map<std::string, std::shared_ptr<ImageTexture>> textures;
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
   Mesh(std::vector<float> _vertices, std::vector<unsigned int> _indices,
@@ -143,6 +148,7 @@ public:
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
+    glBindVertexArray(0);
     model = glm::mat4(1.0f);
   }
   ~Mesh() {
@@ -152,7 +158,7 @@ public:
     program.reset();
     glDeleteVertexArrays(1, &vao);
   }
-  void insert(std::string name, std::shared_ptr<ImageTexture> &texture) {
+  void insert(const char* name, std::shared_ptr<ImageTexture> &texture) {
     textures[name] = std::move(texture);
   }
   void activate_textures() {
@@ -165,12 +171,8 @@ public:
       }
     }
   }
-  void set() {
-    program->set("model", model);
-  }
-  void process() {
-    
-  }
+  void set() { program->set("model", model); }
+  void process() {}
   void draw() {
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -179,15 +181,25 @@ public:
 void framebuffer_size_callback(GLFWwindow *, int width, int height);
 class Camera;
 class Light {
-  glm::mat4 model;
   GLFWwindow *window;
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   unsigned int vao;
 
 public:
-  glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+  glm::vec3 lightPos;
   glm::vec4 light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+  glm::vec4 ambient;
+  glm::vec4 diffuse;
+  glm::vec4 specular;
+  glm::vec3 direction;
+  glm::mat4 model;
+  float constant;
+  float linear;
+  float quadratic;
+  float cutOff;
+  float outerCutoff;
+  int light_type = 1;
   std::shared_ptr<ShaderProgram> program = std::make_shared<ShaderProgram>();
   Light(std::vector<float> _vertices, std::vector<unsigned int> _indices,
         GLFWwindow *_window)
@@ -235,26 +247,32 @@ public:
     if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
       lightPos.z += 0.1f;
     }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
       lightPos.y -= 0.1f;
     }
-    if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
+    if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS) {
       lightPos.y += 0.1f;
     }
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS){
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
       lightPos.x -= 0.1f;
     }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
+    if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) {
       lightPos.x += 0.1f;
     }
-    // light_color.x = sin(glfwGetTime() * 2.0f);
-    // light_color.y = sin(glfwGetTime() * 0.7f);
-    // light_color.z = sin(glfwGetTime() * 1.3f);
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+      light_type = 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+      light_type = 2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+      light_type = 0;
+    }
   }
   void set() {
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.1f));
+    model = glm::scale(model, glm::vec3(0.2f));
     program->set("model", model);
     program->set("light_color", light_color);
   }
@@ -281,7 +299,8 @@ class Program {
 
 public:
   GLFWwindow *window;
-  std::shared_ptr<Light> light_src = nullptr;
+  // std::shared_ptr<Light> light_src = nullptr;
+  std::vector<std::shared_ptr<Light>> light_src;
   Program(glm::ivec2 _size) : scr_size(_size) {
     glfwInit();
     window = glfwCreateWindow(scr_size.x, scr_size.y, "Hello Window", nullptr,
@@ -298,13 +317,15 @@ public:
     for (auto &child : children) {
       child.reset();
     }
-    light_src.reset();
+    for (auto &l : light_src) {
+      l.reset();
+    }
     glfwDestroyWindow(window);
     glfwTerminate();
   }
   void push_back(std::shared_ptr<Mesh> &poly) { children.push_back(poly); }
-  // void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light);
-  // }
+  void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light); }
+  void set_light(std::shared_ptr<ShaderProgram> &program);
   void process();
   void run();
 };
@@ -314,7 +335,6 @@ class Camera {
   double lastX, lastY;
   glm::ivec2 scr_size;
   GLFWwindow *window;
-  glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
   glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
   const float cameraSpeed = 0.05f;
   static void mouse_callback_handler(GLFWwindow *window, double xpos,
@@ -363,7 +383,8 @@ class Camera {
   }
 
 public:
-  glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 8.0f);
+  glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+  glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
   glm::mat4 view = glm::mat4(1.0f), projection = glm::mat4(1.0f);
   Camera(GLFWwindow *_window, glm::ivec2 _scr_size)
       : scr_size(_scr_size), window(_window) {

@@ -104,8 +104,8 @@ int main() {
 
       30, 31, 32, 33, 34, 35,
   };
-  std::shared_ptr<Poly> poly =
-      std::make_shared<Poly>(true, vertices, indices, program.window);
+  std::shared_ptr<Mesh> poly =
+      std::make_shared<Mesh>(true, vertices, indices, program.window);
   std::shared_ptr<ImageTexture> texture1 =
       std::make_shared<ImageTexture>("assets/img/wall.jpg");
   poly->insert("texture1", texture1);

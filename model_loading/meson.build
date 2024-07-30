@@ -1,6 +1,8 @@
 deps = [
   dependency('glfw3'),
 ]
-# executable('assimp', 'assimp.cpp', dependencies: deps)
-# executable('mesh', 'mesh.cpp', dependencies: deps)
+inc = [
+  '-I../include/'
+]
+executable('mesh', 'mesh/mesh.cpp', dependencies: deps, cpp_args: inc)
 # executable('model', 'model.cpp', dependencies: deps)

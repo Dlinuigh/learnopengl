@@ -116,8 +116,8 @@ int main() {
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
   for (unsigned int i = 0; i < 10; i++) {
-    std::shared_ptr<Poly> poly =
-        std::make_shared<Poly>(vertices, indices, program.window);
+    std::shared_ptr<Mesh> poly =
+        std::make_shared<Mesh>(vertices, indices, program.window);
     std::shared_ptr<ImageTexture> texture1 =
         std::make_shared<ImageTexture>("assets/img/container2.png");
     poly->insert("material.diffuse", texture1);
