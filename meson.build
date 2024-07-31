@@ -5,3 +5,6 @@ project('learnopengl','cpp',
 subdir('get_started')
 subdir('lighting')
 subdir('model_loading')
+subdir('adv_opengl')
+subdir('adv_lighting')
+subdir('pbr')
