@@ -102,6 +102,7 @@ public:
     } else {
       unsigned int vbo, ebo;
       glGenBuffers(1, &vbo);
+      glGenBuffers(1, &ebo);
       glGenVertexArrays(1, &vao);
       glBindVertexArray(vao);
       glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -237,7 +238,7 @@ public:
     while (!glfwWindowShouldClose(window)) {
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT); 
-      for (auto t = 0; t < textures.size(); t++) {
+      for (auto t = 0; t < (int)textures.size(); t++) {
         textures[t]->activate(t);
       }
       glm::mat4 model = glm::mat4(
