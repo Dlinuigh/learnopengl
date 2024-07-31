@@ -63,9 +63,7 @@ class ShaderProgram {
 
 public:
   ShaderProgram() { id = glCreateProgram(); }
-  ~ShaderProgram() {
-    glDeleteProgram(id);
-  }
+  ~ShaderProgram() { glDeleteProgram(id); }
   void load_shader(std::string filename, int flag) {
     std::ifstream stream(filename, std::ios::in);
     if (stream.is_open()) {
@@ -147,10 +145,7 @@ public:
     glBindTexture(GL_TEXTURE_2D, id);
     index = idx;
   }
-  ~Texture() {
-    if (glIsTexture(id))
-      glDeleteTextures(1, &id);
-  }
+  ~Texture() { glDeleteTextures(1, &id); }
 };
 class TextureMgr {
   std::map<std::string, std::shared_ptr<Texture>> texture_lut;
@@ -163,6 +158,14 @@ public:
     static TextureMgr stance;
     return stance;
   }
+  void free(){
+    for (auto &t : texture_lut) {
+      t.second.reset();
+    }
+  }
+  ~TextureMgr() {
+    
+  }
   void set(std::string name, std::shared_ptr<Texture> &texture) {
     texture_lut[name] = std::move(texture);
   }
@@ -170,6 +173,7 @@ public:
   std::shared_ptr<Texture> &get(std::string name) { return texture_lut[name]; }
 };
 class Mesh {
+  // FIXME 过去的删除reset的代码并没有解决问题，之后就是手动控制了
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
   std::vector<std::string> diffuse;
@@ -221,11 +225,10 @@ public:
     glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void *)offsetof(Vertex, m_Weights));
     glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
   }
-  ~Mesh() {
-    glBindVertexArray(0);
-    glDeleteVertexArrays(1, &vao);
-  }
+  ~Mesh() { glDeleteVertexArrays(1, &vao); }
   void process(GLFWwindow *) {}
   void draw() {
     glBindVertexArray(vao);
@@ -375,6 +378,12 @@ public:
   Model(std::string path, bool gamma = false) : gammaCorrection(gamma) {
     loadModel(path);
   }
+  ~Model() {
+    program.reset();
+    for (auto &m : meshes) {
+      m.reset();
+    }
+  }
   void draw() {
     for (auto &m : meshes) {
       m->draw();
@@ -507,6 +516,9 @@ public:
     camera = std::make_shared<Camera>(scr_size);
   }
   ~Program() {
+    model.reset();
+    camera.reset();
+    mgr.free();
     glfwTerminate();
   }
   void push_back(std::shared_ptr<Light> &light) { light_src.push_back(light); }
