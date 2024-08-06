@@ -1,0 +1,270 @@
+\documentclass{article}
+\usepackage[left=0.5in, marginpar=3in, right=3.5in]{geometry}
+\usepackage{listings}
+\lstset{breaklines=true} % 全局设置
+\usepackage{xeCJK}
+\usepackage{tabularx}
+\usepackage{marginnote}
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+\tolerance=300
+\begin{document}
+\section{Stencil testing}
+
+\marginnote{一旦段渲染处理了一段，一个称为模板测试的就像深度测试一样可以放弃段渲染结果，之后幸存的段传递给深度测试，并可能放弃更多的段。模板测试基于另一个称之为模板缓冲区的内容，我们可以更新这个缓冲区内容来实现一些有趣的效果。}
+Once the fragment shader has processed the fragment a so called stencil test is executed that, just like the depth test, has the option to discard fragments. After that the remaining fragments are passed to the depth test where OpenGL could possibly discard even more fragments. The stencil test is based on the content of yet another buffer called the stencil buffer that we're allowed to update during rendering to achieve interesting effects.
+
+\marginnote{一个模板缓冲区通常每个模板值包含8比特，使得每像素可以生成256种不同的模板值。我们可以设置这些模板值为我们喜欢的并且可以弃用或者启用那些具有特定模板值的特定段。}
+A stencil buffer (usually) contains 8 bits per stencil value that amounts to a total of 256 different stencil values per pixel. We can set these stencil values to values of our liking and we can discard or keep fragments whenever a particular fragment has a certain stencil value.
+
+\marginnote{每个管理窗口的库都需要设置一个模板缓冲区，GLFW自动执行，所以我们不需要告诉它这样做，但是其他的可能默认没有，所以你最好确认以下库的文档。}
+Each windowing library needs to set up a stencil buffer for you. GLFW does this automatically so we don't have to tell GLFW to create one, but other windowing libraries may not create a stencil buffer by default so be sure to check your library's documentation.
+
+\marginnote{下面展示一个简单的模板缓冲区样例。}
+A simple example of a stencil buffer is shown below (pixels not-to-scale):
+A simple demonstration of a stencil buffer
+
+\marginnote{模板缓冲区首先清零然后填充开放边界矩形的1。场景的段只有在段的模板缓冲区包含1的时候才渲染。}
+The stencil buffer is first cleared with zeros and then an open rectangle of 1s is stored in the stencil buffer. The fragments of the scene are then only rendered (the others are discarded) wherever the stencil value of that fragment contains a 1.
+
+\marginnote{模板缓冲区操作使得可以在想要渲染的段的地方设置特定的值。渲染时改变的模板缓冲区的内容就能写入模板缓冲区。在相同帧或者接下来的帧可以读取这些值来判断能否通过模板缓冲区测试。你可以随意使用模板缓冲区，但是一般按照如下纲要：}
+Stencil buffer operations allow us to set the stencil buffer at specific values wherever we're rendering fragments. By changing the content of the stencil buffer while we're rendering, we're writing to the stencil buffer. In the same (or following) frame(s) we can read these values to discard or pass certain fragments. When using stencil buffers you can get as crazy as you like, but the general outline is usually as follows:
+%\marginnote{\begin{itemize}
+%        \item 启用待写入的模板缓冲区
+%        \item 渲染物体，更新模板缓冲区内容
+%        \item 禁止写入
+%        \item 渲染其他物体，此时根据模板缓冲区内容放弃一些段
+%\end{itemize}}
+\begin{itemize}
+\item Enable writing to the stencil buffer.
+\item Render objects, updating the content of the stencil buffer.
+\item Disable writing to the stencil buffer.
+\item Render (other) objects, this time discarding certain fragments based on the content of the stencil buffer.
+\end{itemize}
+
+\marginnote{使用模板缓冲区可以实现根据其他绘制物体的段来放弃某些特定段。}
+By using the stencil buffer we can thus discard certain fragments based on the fragments of other drawn objects in the scene.
+
+\marginnote{你可以启用GL\_STENCIL\_TEST来启用模板缓冲。此后，所有的渲染会以某种方式影响模板缓冲区。}
+You can enable stencil testing by enabling GL\_STENCIL\_TEST. From that point on, all rendering calls will influence the stencil buffer in one way or another.
+
+\begin{lstlisting}
+    glEnable(GL\_STENCIL\_TEST);
+\end{lstlisting}
+
+\marginnote{记得和颜色和深度一样在每次迭代时清空模板缓冲区。}
+Note that you also need to clear the stencil buffer each iteration just like the color and depth buffer:
+
+\begin{lstlisting}
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
+\end{lstlisting}
+
+\marginnote{并且，就像深度缓冲区的glDepthMask函数一样，有等效的方法。glStencilMask函数可以设置一个与模板值相与后写入缓冲区的比特掩码。默认情况下会设置一个不影响的掩码，如果设置一个全部模板值为0的掩码就会导致缓冲区全为0.这等效于深度里面设置为否。}
+Also, just like the depth testing' s glDepthMask function, there is an equivalent function for the stencil buffer. The function glStencilMask allows us to set a bitmask that is ANDed with the stencil value about to be written to the buffer. By default this is set to a bitmask of all 1s not affecting the output, but if we were to set this to 0x00 all the stencil values written to the buffer end up as 0s. This is equivalent to depth testing' s glDepthMask(GL\_FALSE):
+
+\begin{lstlisting}
+glStencilMask(0xFF); // each bit is written to the stencil buffer as is
+glStencilMask(0x00); // each bit ends up as 0 in the stencil buffer (disabling writes)
+\end{lstlisting}
+
+\marginnote{多数情况只需要使用$0x00$和$0xFF$作为掩码，但是知道自定义掩码不是坏事。}
+Most of the cases you'll only be using 0x00 or 0xFF as the stencil mask, but it's good to know there are options to set custom bit-masks.
+
+\section{Stencil functions}
+
+\marginnote{类似于深度测试，有一定数量的控制模板测试能够通过以及如何影响模板缓冲区。总的来说可使用两者函数控制模板测试：glStencilFunc和glStencilOp.}
+Similar to depth testing, we have a certain amount of control over when a stencil test should pass or fail and how it should affect the stencil buffer. There are a total of two functions we can use to configure stencil testing: glStencilFunc and glStencilOp.
+
+\marginnote{该函数有下面三个参数：}
+The glStencilFunc(GLenum func, GLint ref, GLuint mask) has three parameters:
+
+\marginnote{func: 设置测试函数，它接受的两个参数是存储的模板值和ref值，可能的选项是从不、更小、小于等于大于、相等、不相等、总是，类似于深度测试的意思。\\ ref:和模板值比较的数值。\\ mask:两个数据比较之前先和掩码相与，默认是初始化为1。}
+    func: sets the stencil test function that determines whether a fragment passes or is discarded. This test function is applied to the stored stencil value and the glStencilFunc's ref value. Possible options are: GL\_NEVER, GL\_LESS, GL\_LEQUAL, GL\_GREATER, GL\_GEQUAL, GL\_EQUAL, GL\_NOTEQUAL and GL\_ALWAYS. The semantic meaning of these is similar to the depth buffer's functions.
+    ref: specifies the reference value for the stencil test. The stencil buffer's content is compared to this value.
+    mask: specifies a mask that is ANDed with both the reference value and the stored stencil value before the test compares them. Initially set to all 1s.
+
+\marginnote{所以上面展示的简单的例子里面这个函数应该设置为：}
+So in the case of the simple stencil example we've shown at the start, the function would be set to:
+
+\begin{lstlisting}
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+\end{lstlisting}
+
+\marginnote{这告诉Opengl模板值等于1的才进行绘制。}
+This tells OpenGL that whenever the stencil value of a fragment is equal (GL\_EQUAL) to the reference value 1, the fragment passes the test and is drawn, otherwise discarded.
+
+\marginnote{但是该函数值只描述了根据模板缓冲区内容判断是否渲染的情形，不是如何更新缓冲区，这是glStencilOp函数的出处。}
+But glStencilFunc only describes whether OpenGL should pass or discard fragments based on the stencil buffer's content, not how we can actually update the buffer. That is where glStencilOp comes in.
+
+\marginnote{该函数有三个自定义选项：}
+The glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass) contains three options of which we can specify for each option what action to take:
+
+\marginnote{sfail:测试不通过执行的操作\\ dpfail: 通过了模板测试但是深度测试不通过的操作\\ dppass: 全都通过了s}
+    sfail: action to take if the stencil test fails.\\
+    dpfail: action to take if the stencil test passes, but the depth test fails.\\
+    dppass: action to take if both the stencil and the depth test pass.\\
+
+\marginnote{每一个选项你可以的实际值可以是下面的任何一个：}
+Then for each of the options you can take any of the following actions:
+
+
+\begin{tabularx}{\textwidth}{ll}
+Action 	&Description\\
+\hline
+GL\_KEEP 	& The currently stored stencil value is kept.\\
+GL\_ZERO 	& The stencil value is set to 0.\\
+GL\_REPLACE &	The stencil value is replaced with the reference value set with glStencilFunc.\\
+GL\_INCR &	The stencil value is increased by 1 if it is lower than the maximum value.\\
+GL\_INCR\_WRAP &	Same as GL\_INCR, but wraps it back to 0 as soon as the maximum value is exceeded.\\
+GL\_DECR &	The stencil value is decreased by 1 if it is higher than the minimum value.\\
+GL\_DECR\_WRAP &	Same as GL\_DECR, but wraps it to the maximum value if it ends up lower than 0.\\
+GL\_INVERT &	Bitwise inverts the current stencil buffer value.\\
+\end{tabularx}
+
+%\marginnote{\begin{tabularx}{\textwidth}{|l|l|}
+%        操作 	&描述\\
+%        \hline
+%        GL\_KEEP 	& 保留当前模板值\\
+%        GL\_ZERO 	& 置零\\
+%        GL\_REPLACE &	更新为ref值\\
+%        GL\_INCR &	没到最大就自增1\\
+%        GL\_INCR\_WRAP &	自增1,超过最大时归零\\
+%        GL\_DECR &	大于最小自减1\\
+%        GL\_DECR\_WRAP &	自减1，后小于最小值就设置为最大值\\
+%        GL\_INVERT &	按位取反\\
+%\end{tabularx}}
+
+\marginnote{默认设置为全部保留，所以无论测试结果怎样，模板缓冲区保留原值。因为默认不更新缓冲区值所以你想要写入缓冲区需要指明函数的参数。}
+By default the glStencilOp function is set to (GL\_KEEP, GL\_KEEP, GL\_KEEP) so whatever the outcome of any of the tests, the stencil buffer keeps its values. The default behavior does not update the stencil buffer, so if you want to write to the stencil buffer you need to specify at least one different action for any of the options.
+
+\marginnote{所以使用上面两个函数可以精确制定根据缓冲区值更新缓冲区值的条件和方式。}
+So using glStencilFunc and glStencilOp we can precisely specify when and how we want to update the stencil buffer and when to pass or discard fragments based on its content.
+
+\section{Object outlining}
+
+\marginnote{你不太可能可以通过上一小节完全搞懂模板测试的原理，所以我们将展示一个模板测试可以单独实现的特别有用的特性，叫做对象描边。}
+It would be unlikely if you completely understood how stencil testing works from the previous sections alone so we're going to demonstrate a particular useful feature that can be implemented with stencil testing alone called object outlining.
+An object outlined using stencil testing/buffer
+
+\marginnote{对象描边如其名，每一个物体都会生成一个周围的小小的有色边界。这个效果非常有用，例如策略游戏中想要显示选择的单位。}
+Object outlining does exactly what it says it does. For each object (or only one) we're creating a small colored border around the (combined) objects. This is a particular useful effect when you want to select units in a strategy game for example and need to show the user which of the units were selected. The routine for outlining your objects is as follows:
+
+\begin{itemize}
+    \item Enable stencil writing.
+    \item Set the stencil op to GL\_ALWAYS before drawing the (to be outlined) objects, updating the stencil buffer with 1s wherever the objects' fragments are rendered.
+    \item Render the objects.
+    \item Disable stencil writing and depth testing.
+    \item Scale each of the objects by a small amount.
+    \item Use a different fragment shader that outputs a single (border) color.
+    \item Draw the objects again, but only if their fragments' stencil values are not equal to 1.
+    \item Enable depth testing again and restore stencil func to GL\_KEEP.
+\end{itemize}
+
+\marginnote{这个过程首先设置了所有的物体的边的模板值为1,然后当绘制边界的时候，模板测试通过了绘制一个放大的物体。再使用模板测试快速丢弃和原物体重合的边。}
+This process sets the content of the stencil buffer to 1s for each of the object's fragments and when it's time to draw the borders, we draw scaled-up versions of the objects only where the stencil test passes. We're effectively discarding all the fragments of the scaled-up versions that are part of the original objects' fragments using the stencil buffer.
+
+\marginnote{所以我们我们首先要创建一个基本的段渲染器显示边界的颜色。这里简单的定一个硬编码的颜色。}
+So we're first going to create a very basic fragment shader that outputs a border color. We simply set a hardcoded color value and call the shader shaderSingleColor:
+
+
+\begin{lstlisting}
+void main(){
+    FragColor = vec4(0.04, 0.28, 0.26, 1.0);
+}
+\end{lstlisting}
+
+\marginnote{使用上一章的场景我们将给这两个盒子添加轮廓，所以地板就不管了。我们打算首先绘制地板、然后两个盒子（同时写入模板缓冲区），之后绘制放大的盒子（丢弃之前绘制过的盒子的边）}
+Using the scene from the previous chapter we're going to add object outlining to the two containers, so we'll leave the floor out of it. We want to first draw the floor, then the two containers (while writing to the stencil buffer), and then draw the scaled-up containers (while discarding the fragments that write over the previously drawn container fragments).
+
+\marginnote{首先启用模板测试：}
+We first need to enable stencil testing:
+
+\begin{lstlisting}
+glEnable(GL_STENCIL_TEST);
+\end{lstlisting}
+
+\marginnote{要给每一帧定义测试通过或者不通过执行的操作：}
+And then in each frame we want to specify the action to take whenever any of the stencil tests succeed or fail:
+
+\begin{lstlisting}
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  
+\end{lstlisting}
+
+\marginnote{如果失败了简单地保留模板缓冲区的内容。如果两个都通过了就替换成ref值，这个后面会设置为1.}
+If any of the tests fail we do nothing; we simply keep the currently stored value that is in the stencil buffer. If both the stencil test and the depth test succeed however, we want to replace the stored stencil value with the reference value set via glStencilFunc which we later set to 1.
+
+\marginnote{开始先清零，对每一个盒子更新模板值为1.}
+We clear the stencil buffer to 0s at the start of the frame and for the containers we update the stencil buffer to 1 for each fragment drawn:
+
+
+\begin{lstlisting}
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  
+glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
+glStencilMask(0xFF); // enable writing to the stencil buffer
+normalShader.use();
+DrawTwoContainers();
+\end{lstlisting}
+
+\marginnote{使用替换可以保证模板缓冲区的每一个段的值都是1。因为段总是能通过测试，无论是否绘制过，模板缓冲区被更新成了ref的值。}
+By using GL\_REPLACE as the stencil op function we make sure that each of the containers' fragments update the stencil buffer with a stencil value of 1. Because the fragments always pass the stencil test, the stencil buffer is updated with the reference value wherever we've drawn them.
+
+\marginnote{现在盒子绘制的地方，模板缓冲区更新成了1,我们可以绘制放大的盒子了，但是这次设置了合适的函数后禁用模板缓冲区的写入。}
+Now that the stencil buffer is updated with 1s where the containers were drawn we're going to draw the upscaled containers, but this time with the appropriate test function and disabling writes to the stencil buffer:
+
+
+\begin{lstlisting}
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilMask(0x00); // disable writing to the stencil buffer
+glDisable(GL_DEPTH_TEST);
+shaderSingleColor.use(); 
+DrawTwoScaledUpContainers();
+\end{lstlisting}
+
+\marginnote{设置了函数为不等，所以只会绘制不等于1的部分，这一次只绘制之前绘制的盒子的外部的盒子部分。注意我们也禁用了深度测试，所以放大的盒子不会被地板覆盖。完成之后要再次确保启用深度测试。}
+We set the stencil function to GL\_NOTEQUAL to make sure that we're only drawing parts of the containers that are not equal to 1. This way we only draw the part of the containers that are outside the previously drawn containers. Note that we also disable depth testing so the scaled up containers (e.g. the borders) do not get overwritten by the floor. Make sure to enable the depth buffer again once you're done.
+
+\marginnote{完成的代码如下：}
+The total object outlining routine for our scene looks something like this:
+
+
+\begin{lstlisting}
+glEnable(GL_DEPTH_TEST);
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  
+  
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
+
+glStencilMask(0x00); // make sure we don't update the stencil buffer while drawing the floor
+normalShader.use();
+DrawFloor()  
+  
+glStencilFunc(GL_ALWAYS, 1, 0xFF); 
+glStencilMask(0xFF); 
+DrawTwoContainers();
+  
+glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+glStencilMask(0x00); 
+glDisable(GL_DEPTH_TEST);
+shaderSingleColor.use(); 
+DrawTwoScaledUpContainers();
+glStencilMask(0xFF);
+glStencilFunc(GL_ALWAYS, 1, 0xFF);   
+glEnable(GL_DEPTH_TEST);
+\end{lstlisting}  
+
+\marginnote{你了解了背后的原理这些操作就不难理解。否则仔细多读几遍之前的小节，现在你看到了一整个使用样例，尝试去完全理解函数的作用。}
+As long as you understand the general idea behind stencil testing this shouldn't be too hard to understand. Otherwise try to carefully read the previous sections again and try to completely understand what each of the functions does now that you've seen an example of it can be used.
+
+\marginnote{轮廓算法的结果看起来这个样子：}
+The result of the outlining algorithm then looks like this:
+3D scene with object outlining using a stencil buffer
+
+\marginnote{查看一下完整的物体描边算法的代码。你会发现两个盒子之间的边界重叠了（比如一个策略游戏想选择10个单位，通常合并边界更好）。如果你要想每一个物体独立边界，你需要一个一个清零模板缓冲区并稍加修改深度缓冲区。}
+Check the source code here to see the complete code of the object outlining algorithm.
+You can see that the borders overlap between both containers which is usually the effect that we want (think of strategy games where we want to select 10 units; merging borders is generally preferred). If you want a complete border per object you'd have to clear the stencil buffer per object and get a little creative with the depth buffer.
+
+\marginnote{物体描边算法常用语可视化选择物体（比如策略游戏）并且这样的算法可以简单地用一个模型类实现。你可以在模型类里面设置一个布尔标志是否绘制边界。如果你更具创造性你可以甚至设置一个更自然的边界用后处理过滤器比如高斯模糊。}
+The object outlining algorithm you've seen is commonly used in games to visualize selected objects (think of strategy games) and an algorithm like this can easily be implemented within a model class. You could set a boolean flag within the model class to draw either with borders or without. If you want to be creative you could even give the borders a more natural look with the help of post-processing filters like Gaussian Blur.
+
+\marginnote{模板测试有许多目的（除物体描边以外）如绘制镜像纹理或者使用影子体积技术渲染实时的影子。模板缓冲区给予我们本身具有可扩展性的OpenGL工具组件以外的很不错的工具。}
+Stencil testing has many more purposes (beside outlining objects) like drawing textures inside a rear-view mirror so it neatly fits into the mirror shape, or rendering real-time shadows with a stencil buffer technique called shadow volumes. Stencil buffers give us with yet another nice tool in our already extensive OpenGL toolkit.
+\end{document}
