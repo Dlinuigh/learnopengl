@@ -1,6 +1,6 @@
 #include <iostream>
 #define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
+#include "glad/gl.h"
 #include <GLFW/glfw3.h>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {

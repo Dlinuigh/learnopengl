@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
+#include "glad/gl.h"
 #include <GLFW/glfw3.h>
 
 void framebuffer_size_callback(GLFWwindow *, int width, int height) {
