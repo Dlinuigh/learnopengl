@@ -1,3 +1,13 @@
-deps = [dependency('glfw3')]
-inc = ['-I../include']
-excutable('depth', 'depth/program.cpp', dependencies: deps, cpp_args: inc)
+deps = [
+    dependency('glfw3'),
+    dependency('assimp'),
+]
+inc = [
+    '-I../include'
+]
+executable(
+    'depth', 
+    'depth/program.cpp', 
+    dependencies: deps, 
+    cpp_args: inc
+)
