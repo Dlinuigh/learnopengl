@@ -2,7 +2,7 @@
 void checkError(std::string function) {
   GLenum err = glGetError();
   while (err != GL_NO_ERROR) {
-    std::cerr << function << ": " << err << std::endl;
+    std::cerr << "Err " << function << ": " << err << std::endl;
   }
 }
 void Model::loadModel(std::string path) {
@@ -118,6 +118,8 @@ void Program::run() {
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_FALSE);
     glm::mat4 m = glm::mat4(1.0f);
     model->use();
     model->set(camera->view, camera->projection, m, camera->cameraPos);

@@ -272,9 +272,9 @@ public:
 };
 int main() {
   Program program({800, 600});
-  program.program_shader->load_shader("assets/glsl/vertex_coordinate.glsl",
+  program.program_shader->load_shader("assets/glsl/coordinate/vertex_coordinate.glsl",
                                       GL_VERTEX_SHADER);
-  program.program_shader->load_shader("assets/glsl/fragment_coordinate.glsl",
+  program.program_shader->load_shader("assets/glsl/coordinate/fragment_coordinate.glsl",
                                       GL_FRAGMENT_SHADER);
   program.program_shader->link();
   std::vector<float> vertices = {
